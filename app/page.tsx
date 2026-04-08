@@ -1,7 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useGhostAuth } from '@/lib/useGhostAuth'
 import { useRoom } from '@/lib/useRoom'
@@ -20,31 +20,12 @@ const ROOMS: Room[] = [
   { id: 'cozy_corner', name: 'Chill', icon: 'self_improvement' },
 ]
 
-const THEMES = {
-  void: {
-    label: 'VOID',
-    desc: 'Deep black — default',
-    emoji: '🌑',
-    bg: '#050508',
-    accent: '#8b5cf6',
-  },
-  crimson: {
-    label: 'CRIMSON',
-    desc: 'Blood red operator',
-    emoji: '🔴',
-    bg: '#080308',
-    accent: '#f43f5e',
-  },
-  matrix: {
-    label: 'MATRIX',
-    desc: 'Green terminal mode',
-    emoji: '💚',
-    bg: '#020a02',
-    accent: '#22c55e',
-  },
-} as const
-
-type ThemeKey = keyof typeof THEMES
+const GHOST_AVATARS = [
+  '👻', '🐺', '🦊', '🐉', '🦅',
+  '🦇', '🐍', '🦁', '🐯', '🦈',
+  '🦂', '🐙', '🦋', '🐦‍⬛', '🦎',
+  '🐸', '🦉', '🦚', '🐲', '🔮',
+]
 
 const MOOD_TAGS = [
   { label: 'Gratitude', className: 'bg-primary-container/20 text-primary border-primary/10' },
@@ -52,15 +33,6 @@ const MOOD_TAGS = [
   { label: 'Curious', className: 'bg-tertiary-container/20 text-tertiary border-tertiary/10' },
   { label: 'Sleepy', className: 'bg-surface-container-high text-on-surface-variant border-outline-variant/10' },
 ]
-
-function initialsFromName(name: string): string {
-  return name
-    .split('-')
-    .map((chunk) => chunk[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
 
 function avatarTone(name: string): string {
   const tones = [
@@ -83,7 +55,10 @@ export default function Home() {
 
   const [content, setContent] = useState('')
   const [showSettings, setShowSettings] = useState(false)
-  const [currentTheme, setCurrentTheme] = useState<ThemeKey>('void')
+  const [customName, setCustomName] = useState('')
+  const [nameError, setNameError] = useState('')
+  const [nameSaved, setNameSaved] = useState(false)
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('')
   const [supabase] = useState(() => createClient())
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -91,20 +66,11 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Theme application
-  const applyTheme = useCallback((theme: ThemeKey) => {
-    const t = THEMES[theme]
-    document.documentElement.style.setProperty('--accent-primary', t.accent)
-    document.documentElement.style.setProperty('--bg-void', t.bg)
-    setCurrentTheme(theme)
-    localStorage.setItem('ghost-theme', theme)
-  }, [])
-
-  // Restore saved theme on mount
+  // Restore saved avatar on mount
   useEffect(() => {
-    const saved = localStorage.getItem('ghost-theme') as ThemeKey | null
-    if (saved && THEMES[saved]) applyTheme(saved)
-  }, [applyTheme])
+    const saved = localStorage.getItem('ghost-avatar')
+    if (saved) setSelectedAvatar(saved)
+  }, [])
 
   // Ghost name regeneration
   const regenerateGhostName = async () => {
@@ -123,6 +89,34 @@ export default function Home() {
     } catch (err) {
       console.error('Name regeneration failed:', err)
     }
+  }
+
+  // Custom name save
+  const saveCustomName = async () => {
+    const trimmed = customName.trim()
+    if (!trimmed) { setNameError('Name cannot be empty'); return }
+    if (trimmed.length < 2) { setNameError('Minimum 2 characters required'); return }
+    if (trimmed.length > 20) { setNameError('Maximum 20 characters allowed'); return }
+    if (!/^[a-zA-Z0-9\-_]+$/.test(trimmed)) {
+      setNameError('Only letters, numbers, - and _ allowed'); return
+    }
+    try {
+      setNameError('')
+      const finalName = trimmed.toUpperCase()
+      await supabase.auth.updateUser({ data: { ghost_name: finalName } })
+      setNameSaved(true)
+      setTimeout(() => { setNameSaved(false); window.location.reload() }, 1200)
+    } catch (err) {
+      setNameError('Save failed — try again')
+      console.error(err)
+    }
+  }
+
+  // Avatar save
+  const saveAvatar = (emoji: string) => {
+    setSelectedAvatar(emoji)
+    localStorage.setItem('ghost-avatar', emoji)
+    supabase.auth.updateUser({ data: { ghost_avatar: emoji } }).catch(console.error)
   }
 
   // Session clear
@@ -247,8 +241,8 @@ export default function Home() {
 
           <div className="mt-auto px-6">
             <div className="flex items-center gap-3 rounded-full border border-outline-variant/10 bg-surface-container-lowest p-3 shadow-sm">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary-container/30 font-label text-sm font-bold text-on-primary-container">
-                {initialsFromName(myGhost)}
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary-container/30 text-lg">
+                {selectedAvatar || '👻'}
               </div>
               <div className="min-w-0 flex-1 overflow-hidden">
                 <p className="truncate font-headline text-sm font-bold">{myGhost}</p>
@@ -347,13 +341,14 @@ export default function Home() {
               if (isMe) {
                 return (
                   <div key={message.id} className="ml-auto flex max-w-2xl items-end justify-end gap-3">
-                    <div className="flex items-end gap-1">
+                    <div className="flex items-end gap-2">
                       <div className="flex flex-col items-end gap-1">
                         <span className="font-label text-[10px] font-bold text-primary">You</span>
                         <div className="rounded-2xl rounded-br-sm bg-primary-container px-4 py-3 font-body text-on-primary-container shadow-[0_10px_30px_rgba(0,101,144,0.1)]">
                           {message.content}
                         </div>
                       </div>
+                      <span className="text-lg mb-1">{selectedAvatar || '👻'}</span>
                     </div>
                     <span className="mb-1 hidden text-[10px] text-slate-400 sm:block">{sentAt}</span>
                   </div>
@@ -362,8 +357,8 @@ export default function Home() {
 
               return (
                 <div key={message.id} className="flex max-w-2xl items-end gap-3">
-                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-full font-label text-xs font-bold ${avatarTone(message.sender_name)}`}>
-                    {initialsFromName(message.sender_name)}
+                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg ${avatarTone(message.sender_name)}`}>
+                    {'👻'}
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="ml-4 font-label text-[10px] font-bold text-slate-400">{message.sender_name}</span>
@@ -509,11 +504,11 @@ export default function Home() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md">
-          <div className="relative mx-4 w-full max-w-sm overflow-y-auto max-h-[90vh] rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-sm overflow-y-auto max-h-[90vh] rounded-2xl border border-slate-200 bg-white shadow-2xl">
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white rounded-t-2xl">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">settings</span>
                 <span className="font-headline text-sm font-bold tracking-tight text-slate-700 uppercase">
@@ -522,7 +517,12 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowSettings(false)}
+                onClick={() => {
+                  setShowSettings(false)
+                  setCustomName('')
+                  setNameError('')
+                  setNameSaved(false)
+                }}
                 className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
               >
                 <span className="material-symbols-outlined">close</span>
@@ -531,14 +531,14 @@ export default function Home() {
 
             <div className="p-6 space-y-6">
 
-              {/* Current Identity */}
+              {/* Current Identity Card */}
               <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
                 <div className="font-label text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">
                   Current Identity
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container/30 text-lg">
-                    👻
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-container/30 text-2xl">
+                    {selectedAvatar || '👻'}
                   </div>
                   <div>
                     <div className="font-headline text-sm font-bold text-primary">{myGhost}</div>
@@ -549,7 +549,112 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Feature 1 — Ghost Name Regenerate */}
+              {/* Custom Name Input */}
+              <div>
+                <div className="font-label text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">
+                  Set Custom Name
+                </div>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs text-primary/60">
+                      {'>'}
+                    </span>
+                    <input
+                      type="text"
+                      value={customName}
+                      onChange={(e) => {
+                        setCustomName(e.target.value)
+                        setNameError('')
+                        setNameSaved(false)
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && saveCustomName()}
+                      placeholder={myGhost || 'ENTER_YOUR_NAME'}
+                      maxLength={20}
+                      className="w-full rounded-xl border border-slate-200 bg-white pl-8 pr-4 py-3 font-mono text-xs text-slate-700 placeholder:text-slate-300 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase tracking-wider"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-label text-[8px] text-slate-300 uppercase">
+                      {customName.length}/20 chars
+                    </span>
+                    {nameError && (
+                      <span className="font-label text-[8px] text-red-500">{nameError}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={saveCustomName}
+                    disabled={!customName.trim() || nameSaved}
+                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-label text-xs font-bold tracking-widest uppercase transition-all ${
+                      nameSaved
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                        : 'border-slate-200 hover:border-primary/40 hover:bg-primary-container/10 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {nameSaved ? (
+                      <>
+                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                        Saved — Reloading...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-sm">save</span>
+                        Save Name
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+              {/* Avatar Picker */}
+              <div>
+                <div className="font-label text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">
+                  Choose Avatar
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {GHOST_AVATARS.map((emoji, idx) => (
+                    <button
+                      type="button"
+                      key={`${emoji}-${idx}`}
+                      onClick={() => saveAvatar(emoji)}
+                      className={`flex items-center justify-center h-12 w-full text-2xl rounded-xl border transition-all hover:scale-110 active:scale-95 ${
+                        selectedAvatar === emoji
+                          ? 'border-primary/60 bg-primary-container/30 shadow-[0_0_12px_rgba(0,101,144,0.2)]'
+                          : 'border-slate-100 hover:border-primary/30 hover:bg-slate-50'
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+                {selectedAvatar && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="font-label text-[8px] text-slate-400 uppercase">
+                      Selected:
+                    </span>
+                    <span className="text-base">{selectedAvatar}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedAvatar('')
+                        localStorage.removeItem('ghost-avatar')
+                        supabase.auth.updateUser({ data: { ghost_avatar: null } }).catch(console.error)
+                      }}
+                      className="ml-auto font-label text-[8px] text-red-400 hover:text-red-500 uppercase transition-colors"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+              {/* Regenerate Identity */}
               <div>
                 <div className="font-label text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">
                   Ghost Identity
@@ -574,39 +679,7 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Feature 2 — Theme Toggle */}
-              <div>
-                <div className="font-label text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-                  Theme
-                </div>
-                <div className="space-y-2">
-                  {(Object.entries(THEMES) as [ThemeKey, typeof THEMES[ThemeKey]][]).map(([key, theme]) => (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => applyTheme(key)}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
-                        currentTheme === key
-                          ? 'border-primary/40 bg-primary-container/20'
-                          : 'border-slate-100 hover:border-primary/20 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-base">{theme.emoji}</span>
-                        <div className="text-left">
-                          <div className="font-headline text-[10px] font-bold text-slate-700 uppercase">{theme.label}</div>
-                          <div className="font-label text-[8px] text-slate-400">{theme.desc}</div>
-                        </div>
-                      </div>
-                      {currentTheme === key && (
-                        <span className="material-symbols-outlined text-sm text-primary">check_circle</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Feature 3 — Account Clear */}
+              {/* Danger Zone */}
               <div>
                 <div className="font-label text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">
                   Danger Zone
@@ -636,7 +709,7 @@ export default function Home() {
             {/* Footer */}
             <div className="border-t border-slate-100 px-6 py-3">
               <div className="font-label text-[8px] font-bold uppercase tracking-widest text-slate-300 text-center">
-                GHOST_PROTOCOL v1.0 — All sessions are ephemeral
+                GHOSTALK v1.0 — All sessions are ephemeral
               </div>
             </div>
 
