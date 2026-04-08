@@ -1,103 +1,97 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Ghost, Send } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { GhostIdentityBadge } from '@/components/GhostIdentityBadge'
+
+const PREDEFINED_ROOMS = [
+  { id: 'hot-takes', name: '🔥 Hot Takes', desc: 'Controversial opinions only' },
+  { id: 'confessions', name: '👻 Confessions', desc: 'What happens here, stays here' },
+  { id: 'shower-thoughts', name: '💡 Shower Thoughts', desc: 'Mind-blowing realisations' },
+  { id: 'late-night', name: '🌙 Late Night', desc: '3AM vibes & deep talks' },
+  { id: 'rants', name: '😤 Rants', desc: 'Let it all out' }
+]
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [customRoom, setCustomRoom] = useState('')
+  const router = useRouter()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleJoinCustom = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!customRoom.trim()) return
+    // Convert to slug
+    const slug = customRoom.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    router.push(`/room/${slug}`)
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <GhostIdentityBadge />
+      </div>
+
+      <div className="w-full max-w-3xl flex flex-col items-center text-center space-y-8 mt-12 mb-16">
+        <div className="space-y-4">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-zinc-900 rounded-full border border-zinc-800 shadow-2xl shadow-zinc-900/50">
+              <Ghost className="w-12 h-12 text-zinc-100" />
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-2">
+            Ghost Protocol
+          </h1>
+          <p className="text-lg md:text-xl text-zinc-400 font-medium">
+            Speak freely. Disappear completely.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Custom Room Input */}
+        <div className="w-full max-w-md pt-4">
+          <form onSubmit={handleJoinCustom} className="flex gap-2">
+            <Input 
+              type="text" 
+              placeholder="Enter secret room ID..." 
+              value={customRoom}
+              onChange={(e) => setCustomRoom(e.target.value)}
+              className="bg-zinc-900 border-zinc-800 text-zinc-100 focus-visible:ring-zinc-700 h-12 text-base md:h-14"
+            />
+            <Button type="submit" size="lg" className="h-12 md:h-14 px-6 md:px-8 bg-zinc-100 text-zinc-900 hover:bg-zinc-300">
+              Enter <span className="hidden sm:inline ml-1">Room</span>
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* Context Feed */}
+      <div className="w-full max-w-5xl">
+        <div className="flex items-center justify-between mb-6 px-2">
+          <h2 className="text-xl font-semibold text-zinc-200">Active Ectoplasm</h2>
+          <span className="text-sm text-zinc-500">Trending Now</span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {PREDEFINED_ROOMS.map(room => (
+            <Card 
+              key={room.id} 
+              className="bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-800/80 transition-all cursor-pointer group"
+              onClick={() => router.push(`/room/${room.id}`)}
+            >
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-zinc-100 mb-2 group-hover:text-white transition-colors">{room.name}</h3>
+                <p className="text-sm text-zinc-400">{room.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+      
+      <div className="mt-auto pt-16 pb-8 text-center text-xs text-zinc-600">
+        All messages are permanently purged after 4 hours. No traces left behind.
+      </div>
     </div>
-  );
+  )
 }
