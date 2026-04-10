@@ -3,6 +3,14 @@
 import { format } from 'date-fns'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import {
+  IoHomeOutline,
+  IoVideocamOutline,
+  IoCameraOutline,
+  IoShareSocialOutline,
+  IoHeartOutline,
+} from 'react-icons/io5'
+import GradientMenu from '@/components/ui/gradient-menu'
 import { useGhostAuth } from '@/lib/useGhostAuth'
 import { useRoom } from '@/lib/useRoom'
 import { createClient } from '@/lib/supabaseClient'
@@ -384,6 +392,43 @@ export default function Home() {
 
   const goalCount = Math.min(messages.length, 1000)
   const progressPercent = Math.max(8, Math.round((goalCount / 1000) * 100))
+  const navItems = [
+    {
+      title: 'Rooms',
+      icon: <IoHomeOutline />,
+      gradientFrom: '#a955ff',
+      gradientTo: '#ea51ff',
+      onClick: () => setActiveTab('rooms'),
+    },
+    {
+      title: 'Discover',
+      icon: <IoVideocamOutline />,
+      gradientFrom: '#56CCF2',
+      gradientTo: '#2F80ED',
+      onClick: () => setActiveTab('discover'),
+    },
+    {
+      title: 'Guidelines',
+      icon: <IoCameraOutline />,
+      gradientFrom: '#FF9966',
+      gradientTo: '#FF5E62',
+      onClick: () => setActiveTab('guidelines'),
+    },
+    {
+      title: 'Chat',
+      icon: <IoShareSocialOutline />,
+      gradientFrom: '#80FF72',
+      gradientTo: '#7EE8FA',
+      onClick: () => setActiveTab('rooms'),
+    },
+    {
+      title: 'Settings',
+      icon: <IoHeartOutline />,
+      gradientFrom: '#ffa9c6',
+      gradientTo: '#f434e2',
+      onClick: () => setShowSettings(true),
+    },
+  ]
 
   async function submitMessage() {
     if (!content.trim() || !connected) return
@@ -411,33 +456,7 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-4 sm:gap-8">
-          <nav className="hidden items-center gap-8 font-label font-semibold text-slate-500 lg:flex">
-            <button
-              onClick={() => setActiveTab('rooms')}
-              className={`pb-1 transition-all ${activeTab === 'rooms' ? 'border-b-2 border-sky-400 font-bold text-sky-700' : 'rounded-full px-3 py-1 hover:bg-sky-50/70'}`}
-            >
-              Rooms
-            </button>
-            <button
-              onClick={() => setActiveTab('discover')}
-              className={`pb-1 transition-all ${activeTab === 'discover' ? 'border-b-2 border-sky-400 font-bold text-sky-700' : 'rounded-full px-3 py-1 hover:bg-sky-50/70'}`}
-            >
-              Discover
-            </button>
-            <button
-              onClick={() => setActiveTab('guidelines')}
-              className={`pb-1 transition-all ${activeTab === 'guidelines' ? 'border-b-2 border-sky-400 font-bold text-sky-700' : 'rounded-full px-3 py-1 hover:bg-sky-50/70'}`}
-            >
-              Guidelines
-            </button>
-          </nav>
-
-          <button
-            onClick={() => setActiveTab('rooms')}
-            className="rounded-full bg-tertiary-container px-5 py-2 font-headline text-sm font-semibold text-on-tertiary-container transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-          >
-            Start Chatting
-          </button>
+          <GradientMenu items={navItems} />
         </div>
       </header>
 
