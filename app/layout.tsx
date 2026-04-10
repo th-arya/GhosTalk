@@ -1,30 +1,41 @@
 import type { Metadata, Viewport } from 'next'
-import { Manrope, Space_Grotesk } from 'next/font/google'
+import { Manrope, Nunito, Poppins, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { GhostAuthProvider } from '@/lib/useGhostAuth'
 
-const spaceGrotesk = Space_Grotesk({
+const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-space-grotesk',
+  weight: ['600', '700'],
+  variable: '--font-poppins',
+})
+
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-nunito',
 })
 
 const manrope = Manrope({
   subsets: ['latin'],
-  weight: ['200', '300', '400', '500', '600', '700'],
+  weight: ['500', '600', '700'],
   variable: '--font-manrope',
 })
 
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-jakarta',
+})
+
 export const metadata: Metadata = {
-  title: '//GHOST_PROTOCOL_CHAT',
-  description: 'A privacy-first, anonymous, ephemeral chat web app.',
+  title: 'GhosTalk | Anonymous Chat',
+  description: 'A privacy-first, anonymous, ephemeral real-time chat space.',
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1, // Good for mobile apps to prevent zooming on inputs
 }
 
 export default function RootLayout({
@@ -35,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${spaceGrotesk.variable} ${manrope.variable}`}
+      className={`${poppins.variable} ${nunito.variable} ${manrope.variable} ${plusJakarta.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -45,11 +56,11 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
       </head>
-      <body className="min-h-screen overflow-x-hidden bg-background font-body text-on-background antialiased selection:bg-primary/30">
+      <body className="min-h-screen overflow-x-hidden bg-background font-body text-on-background antialiased selection:bg-primary-container/60 selection:text-on-primary-container">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          forcedTheme="dark"
+          defaultTheme="light"
+          forcedTheme="light"
           disableTransitionOnChange
         >
           <GhostAuthProvider>
