@@ -16,3 +16,4 @@ See: .planning/PROJECT.md (updated 2026-04-08)
 | 260408-xa9 | Create private room with random ID + shareable link | 2026-04-08 | 474dd3f | [260408-xa9](./quick/260408-xa9-create-private-room-with-random-id-share/) |
 | 260410-on9 | Discover trending rooms + Guidelines tab fully functional | 2026-04-10 | 8219719 | [260410-on9-discover-trending-rooms-guidelines-tab-f](./quick/260410-on9-discover-trending-rooms-guidelines-tab-f/) |
 | 260410-eng | Convert all Hinglish text to proper English across project | 2026-04-10 | 09738e7 | [260410-eng](./quick/260410-on9-discover-trending-rooms-guidelines-tab-f/) |
+| 260412-nw0 | Landing page with ghost identity, feature cards, CTA button | 2026-04-12 | 7ed5346 | [260412-nw0](./quick/260412-nw0-create-landing-page-with-ghost-identity-/) |
